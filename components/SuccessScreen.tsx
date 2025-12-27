@@ -11,7 +11,7 @@ interface SuccessScreenProps {
 const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
     const [originalUrl, setOriginalUrl] = useState<string | null>(null);
     const [extensionReady, setExtensionReady] = useState(false);
-    const [unlockStatus, setUnlockStatus] = useState<'pending' | 'success' | 'error'>('pending');
+    const [redirecting, setRedirecting] = useState(false);
 
     useEffect(() => {
         // Play unlock sound
@@ -22,6 +22,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
         const target = params.get('target');
         if (target) {
             setOriginalUrl(target);
+            console.log('[SuccessScreen] Original URL:', target);
         }
 
         // Listen for extension ready signal
@@ -32,19 +33,25 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
             }
             if (event.data.type === 'SQUAT_UNLOCK_SUCCESS') {
                 console.log('[SuccessScreen] Unlock confirmed:', event.data.domain);
-                setUnlockStatus('success');
+                // Content script will handle redirect
             }
             if (event.data.type === 'SQUAT_UNLOCK_ERROR') {
                 console.log('[SuccessScreen] Unlock error:', event.data.error);
-                setUnlockStatus('error');
+                // Fallback to manual redirect
+                if (originalUrl) {
+                    window.location.href = originalUrl;
+                }
             }
         };
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, []);
+    }, [originalUrl]);
 
     const handleProceed = () => {
+        if (redirecting) return; // Prevent double-click
+        setRedirecting(true);
+
         SoundFX.playClick();
 
         // Normalize domain
@@ -55,7 +62,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
             } catch (e) { }
         }
 
-        console.log('[SuccessScreen] Requesting unlock for:', domain);
+        console.log('[SuccessScreen] Requesting unlock for:', domain, 'target:', originalUrl);
 
         // Send message to content script (injected by extension)
         window.postMessage({
@@ -66,17 +73,15 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
             targetUrl: originalUrl
         }, '*');
 
-        // Fallback: if no extension, just redirect after a short delay
+        // Fallback: if content script doesn't redirect after 2 seconds, do it manually
         setTimeout(() => {
-            if (unlockStatus === 'pending') {
-                console.log('[SuccessScreen] No extension response, redirecting anyway...');
-                if (originalUrl) {
-                    window.location.href = originalUrl;
-                } else {
-                    window.open(`https://${data.website}`, '_blank');
-                }
+            console.log('[SuccessScreen] Fallback redirect triggered');
+            if (originalUrl) {
+                window.location.href = originalUrl;
+            } else {
+                window.open(`https://${data.website}`, '_blank');
             }
-        }, 1000);
+        }, 2000);
     };
 
     return (
@@ -157,13 +162,26 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
                     {/* Primary Action */}
                     <button
                         onClick={handleProceed}
-                        className="group w-full bg-success hover:bg-green-500 text-white rounded-xl py-4 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg hover:shadow-success/40"
+                        disabled={redirecting}
+                        className={`group w-full rounded-xl py-4 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${redirecting
+                                ? 'bg-gray-400 cursor-wait'
+                                : 'bg-success hover:bg-green-500 hover:shadow-success/40'
+                            } text-white`}
                     >
-                        <div className="flex flex-col items-start leading-none">
-                            <span className="text-[10px] font-bold uppercase opacity-80 tracking-widest">PROCEED TO</span>
-                            <span className="font-black tracking-wide">{data.website.toUpperCase()}</span>
-                        </div>
-                        {originalUrl ? <ExternalLink size={24} className="group-hover:rotate-45 transition-transform" /> : <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
+                        {redirecting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                <span className="font-bold">Redirecting...</span>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex flex-col items-start leading-none">
+                                    <span className="text-[10px] font-bold uppercase opacity-80 tracking-widest">PROCEED TO</span>
+                                    <span className="font-black tracking-wide">{data.website.toUpperCase()}</span>
+                                </div>
+                                {originalUrl ? <ExternalLink size={24} className="group-hover:rotate-45 transition-transform" /> : <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
+                            </>
+                        )}
                     </button>
 
                     <button
