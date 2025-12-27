@@ -1,6 +1,14 @@
 // Background Service Worker
 // Handles navigation interception and timer checks
 
+// ===========================================
+// CONFIGURATION - Update these values!
+// ===========================================
+// After deploying to GitHub Pages, update this URL:
+// Format: https://<your-username>.github.io/<repo-name>/
+const SQUAT_APP_URL = "https://josep0101.github.io/squat-to-scroll/";
+// ===========================================
+
 // List of distracting websites to block
 const BLOCKED_DOMAINS = [
   "instagram.com",
@@ -46,11 +54,11 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 
     // If no access or access expired
     if (!expiryTime || now > expiryTime) {
-      // Redirect to the extension's index.html (Squat App)
+      // Redirect to the GitHub Pages hosted app
       // We pass the target URL as a query parameter so the app knows what to unlock
-      const extensionUrl = chrome.runtime.getURL('index.html') + `?target=${encodeURIComponent(url)}`;
+      const appUrl = SQUAT_APP_URL + `?target=${encodeURIComponent(url)}`;
 
-      chrome.tabs.update(details.tabId, { url: extensionUrl });
+      chrome.tabs.update(details.tabId, { url: appUrl });
     }
   }
 }, {

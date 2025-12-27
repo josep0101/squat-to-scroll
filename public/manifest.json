@@ -14,7 +14,9 @@
     "*://*.facebook.com/*",
     "*://*.twitter.com/*",
     "*://*.x.com/*",
-    "*://*.reddit.com/*"
+    "*://*.reddit.com/*",
+    "*://*.youtube.com/*",
+    "*://*.twitch.tv/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -33,10 +35,17 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+  "externally_connectable": {
+    "matches": [
+      "https://josep0101.github.io/*",
+      "http://localhost:*/*"
+    ]
+  },
   "web_accessible_resources": [
     {
       "resources": [
         "index.html",
+        "onboarding.html",
         "assets/*",
         "*.wasm",
         "*.data",

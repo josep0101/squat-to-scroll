@@ -25,6 +25,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const targetUrl = params.get('target');
+    const squatsParam = params.get('squats');
+
     if (targetUrl) {
       try {
         const hostname = new URL(targetUrl).hostname;
@@ -33,7 +35,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
         setWebsite(targetUrl);
       }
     }
+
+    // Set squats from URL parameter if provided (from extension)
+    if (squatsParam) {
+      const squatsNum = parseInt(squatsParam);
+      if (!isNaN(squatsNum) && squatsNum > 0) {
+        setSquatsRequired(squatsNum);
+      }
+    }
   }, []);
+
+  // State for configurable squats
+  const [squatsRequired, setSquatsRequired] = useState(10);
 
   const handleStart = () => {
     SoundFX.playStart(); // Play start sound
@@ -43,7 +56,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
       onStart({
         website,
         duration,
-        squatsRequired: 10 // Fixed for demo, normally calculated based on duration
+        squatsRequired
       });
     }, 600);
   };
@@ -80,10 +93,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
         <div className="flex items-center gap-3">
           {/* AI Status Indicator */}
           <div className={`flex items-center gap-2 rounded-full px-3 py-2 backdrop-blur-sm border transition-all duration-300 ${aiStatus === 'ready'
-              ? 'bg-green-500/20 border-green-400/50'
-              : aiStatus === 'loading'
-                ? 'bg-yellow-500/20 border-yellow-400/50'
-                : 'bg-black/20 border-white/20'
+            ? 'bg-green-500/20 border-green-400/50'
+            : aiStatus === 'loading'
+              ? 'bg-yellow-500/20 border-yellow-400/50'
+              : 'bg-black/20 border-white/20'
             }`}>
             {aiStatus === 'loading' && <Loader2 size={14} className="text-yellow-300 animate-spin" />}
             {aiStatus === 'ready' && <div className="w-2 h-2 rounded-full bg-green-400"></div>}
