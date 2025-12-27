@@ -1,0 +1,7 @@
+{
+  "name": "Squat to Scroll v2 OK",
+  "description": "A fitness-first web locker that requires you to perform exercises to unlock screen time.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
