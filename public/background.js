@@ -6,7 +6,7 @@
 // ===========================================
 // After deploying to GitHub Pages, update this URL:
 // Format: https://<your-username>.github.io/<repo-name>/
-const SQUAT_APP_URL = "https://YOUR_GITHUB_USERNAME.github.io/squat-to-scroll/";
+const SQUAT_APP_URL = "https://josep0101.github.io/squat-to-scroll/";
 // ===========================================
 
 // List of distracting websites to block

@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Settings, Dumbbell, ArrowDown, ArrowUp, Pause, Check, AlertTriangle } from 'lucide-react';
 import { SoundFX } from '../utils/audio';
-import { Pose, POSE_CONNECTIONS } from '@mediapipe/pose';
 import { Camera } from '@mediapipe/camera_utils';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import {
+  getPoseInstance,
+  setOnResultsCallback,
+  clearOnResultsCallback,
+  sendFrame,
+  getMediaPipeStatus,
+  subscribeToStatus,
+  POSE_CONNECTIONS,
+  drawConnectors,
+  drawLandmarks
+} from '../utils/mediapipe-service';
 
 interface DetectionScreenProps {
   targetSquats: number;
@@ -28,10 +37,11 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
   // UI State
   const [squatsDoneUI, setSquatsDoneUI] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [feedback, setFeedback] = useState<string>("Initializing Camera...");
+  const [feedback, setFeedback] = useState<string>("Initializing...");
   const [feedbackColor, setFeedbackColor] = useState<string>("text-white");
   const [loading, setLoading] = useState(true);
   const [poseStateUI, setPoseStateUI] = useState<'UP' | 'DOWN'>('UP');
+  const [loadingProgress, setLoadingProgress] = useState<string>("Connecting to AI...");
 
   // Logic State (Refs) - Critical for avoiding stale closures in the loop
   const squatsDoneRef = useRef(0);
@@ -44,7 +54,7 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraRef = useRef<any>(null);
-  const poseRef = useRef<any>(null);
+  const mountedRef = useRef(true);
 
   // Update refs when props/state change
   useEffect(() => {
@@ -55,90 +65,9 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
     targetSquatsRef.current = targetSquats;
   }, [targetSquats]);
 
-  useEffect(() => {
-    // Initialize Audio Engine
-    SoundFX.init();
-
-    // MediaPipe Initialization
-    // MediaPipe Initialization
-    const initMediaPipe = async () => {
-      // NOTE: We are using the imported classes, so we don't check window.Pose
-      try {
-        setFeedback("Loading AI Model...");
-        console.log("Initializing Pose...");
-        const pose = new Pose({
-          locateFile: (file: string) => {
-            // Files are copied to root by vite-plugin-static-copy
-            const url = `/${file}`;
-            console.log(`Loading MediaPipe asset: ${url}`);
-            return url;
-          },
-        });
-
-        pose.setOptions({
-          modelComplexity: 1,
-          smoothLandmarks: true,
-          enableSegmentation: false,
-          smoothSegmentation: false,
-          minDetectionConfidence: 0.65, // Increased confidence for better accuracy
-          minTrackingConfidence: 0.65,
-        });
-
-        pose.onResults(onResults);
-        poseRef.current = pose;
-
-        if (videoRef.current) {
-          setFeedback("Requesting Camera...");
-          console.log("Requesting Camera access...");
-          const camera = new Camera(videoRef.current, {
-            onFrame: async () => {
-              if (!isPausedRef.current && poseRef.current) {
-                await poseRef.current.send({ image: videoRef.current });
-              }
-            },
-            width: 1280,
-            height: 720,
-          });
-          cameraRef.current = camera;
-
-          // Camera Start Promise with Timeout
-          const cameraStartPromise = camera.start();
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Camera start timeout")), 10000)
-          );
-
-          try {
-            await Promise.race([cameraStartPromise, timeoutPromise]);
-            console.log("Camera started successfully");
-            setLoading(false);
-            setFeedback("Stand in frame");
-          } catch (camError) {
-            console.error("Camera failed to start:", camError);
-            setLoading(false);
-            setFeedback("Camera Error: Check Permissions");
-            setFeedbackColor("text-accent-red");
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing MediaPipe:", error);
-        setLoading(false);
-        setFeedback("AI Init Error");
-        setFeedbackColor("text-accent-red");
-      }
-    };
-
-    const timeout = setTimeout(initMediaPipe, 100);
-
-    return () => {
-      clearTimeout(timeout);
-      if (cameraRef.current) cameraRef.current.stop();
-      if (poseRef.current) poseRef.current.close();
-    };
-  }, []);
-
   // Update loop for results
   const onResults = (results: any) => {
-    if (!canvasRef.current || !videoRef.current) return;
+    if (!mountedRef.current || !canvasRef.current || !videoRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -172,7 +101,7 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
     ctx.drawImage(results.image, startX, startY, drawWidth, drawHeight);
 
     // Darken video slightly for UI contrast
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; // Slightly darker for better visibility
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // 2. Draw Skeleton
@@ -271,12 +200,10 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
           }
           else {
             // We are UP, checking for failed reps (cheating)
-            // If user dipped but didn't hit threshold, and is now standing again
             if (lowestAngleRef.current < 160 && lowestAngleRef.current > THRESHOLD_SQUAT) {
               SoundFX.playFailure();
               setFeedback("NOT LOW ENOUGH!");
               setFeedbackColor("text-accent-red");
-              // Reset tracker so we don't spam error
               lowestAngleRef.current = 180;
             } else {
               setFeedback("SQUAT DOWN");
@@ -306,11 +233,109 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
         setFeedbackColor("text-white");
       }
     } else {
-      setFeedback(loading ? (feedback === "Initializing Camera..." ? "Loading..." : feedback) : "No person detected");
-      setFeedbackColor(feedbackColor.includes('red') ? "text-accent-red" : "text-white");
+      if (!loading) {
+        setFeedback("No person detected");
+        setFeedbackColor("text-white");
+      }
     }
     ctx.restore();
   };
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // Initialize Audio Engine
+    SoundFX.init();
+
+    // Subscribe to MediaPipe status
+    const unsubscribe = subscribeToStatus((status) => {
+      if (status === 'loading') {
+        setLoadingProgress("Loading AI Model...");
+      } else if (status === 'ready') {
+        setLoadingProgress("AI Ready!");
+      } else if (status === 'error') {
+        setLoadingProgress("AI Error");
+        setFeedbackColor("text-accent-red");
+      }
+    });
+
+    // Initialize
+    const init = async () => {
+      try {
+        // Check if already ready (preloaded)
+        const currentStatus = getMediaPipeStatus();
+        if (currentStatus === 'ready') {
+          setLoadingProgress("AI Ready! Starting camera...");
+        } else {
+          setLoadingProgress("Loading AI Model...");
+        }
+
+        // Get or initialize pose
+        await getPoseInstance();
+
+        if (!mountedRef.current) return;
+
+        // Set our callback
+        setOnResultsCallback(onResults);
+
+        // Start camera
+        if (videoRef.current) {
+          setLoadingProgress("Starting Camera...");
+
+          const camera = new Camera(videoRef.current, {
+            onFrame: async () => {
+              if (!isPausedRef.current && mountedRef.current && videoRef.current) {
+                await sendFrame(videoRef.current);
+              }
+            },
+            width: 1280,
+            height: 720,
+          });
+          cameraRef.current = camera;
+
+          await camera.start();
+
+          if (!mountedRef.current) {
+            camera.stop();
+            return;
+          }
+
+          console.log("Camera started successfully");
+          setLoading(false);
+          setFeedback("Stand in frame");
+        }
+      } catch (error) {
+        console.error("Error initializing:", error);
+        if (mountedRef.current) {
+          setLoading(false);
+          setFeedback("Init Error - Refresh page");
+          setFeedbackColor("text-accent-red");
+        }
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timeout = setTimeout(init, 100);
+
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(timeout);
+      unsubscribe();
+
+      // Stop camera but DON'T close pose (it's a singleton now)
+      if (cameraRef.current) {
+        try {
+          cameraRef.current.stop();
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        cameraRef.current = null;
+      }
+
+      // Clear callback so we don't get stale updates
+      clearOnResultsCallback();
+    };
+  }, []);
 
   return (
     <div className="bg-background-dark font-display text-white overflow-hidden h-screen w-full flex flex-col relative">
@@ -323,6 +348,15 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
         <div className="relative flex-1 bg-black overflow-hidden flex items-center justify-center lg:border-r border-white/10 order-2 lg:order-1 h-full max-h-screen">
           <video ref={videoRef} className="absolute opacity-0 pointer-events-none" playsInline muted></video>
           <canvas ref={canvasRef} className="w-full h-full object-cover"></canvas>
+
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-40">
+              <div className="w-16 h-16 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mb-6"></div>
+              <p className="text-xl font-bold text-white mb-2">{loadingProgress}</p>
+              <p className="text-sm text-white/50">This may take a few seconds on first load...</p>
+            </div>
+          )}
 
           {/* Floating Feedback */}
           <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30">
@@ -350,8 +384,8 @@ const DetectionScreen: React.FC<DetectionScreenProps> = ({ targetSquats, onCompl
               <X size={24} />
             </button>
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 border border-white/10">
-              <span className={`w-2 h-2 rounded-full ${loading ? 'bg-red-500' : 'bg-accent-red'} animate-pulse`}></span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">LIVE FEED</span>
+              <span className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500' : 'bg-accent-red'} animate-pulse`}></span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">{loading ? 'LOADING' : 'LIVE FEED'}</span>
             </div>
             <button
               onClick={() => SoundFX.playClick()}

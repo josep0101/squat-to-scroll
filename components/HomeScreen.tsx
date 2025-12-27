@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Dumbbell, Settings, Flame, Link as LinkIcon, ChevronDown, ArrowRight } from 'lucide-react';
+import { Dumbbell, Settings, Flame, Link as LinkIcon, ChevronDown, ArrowRight, Loader2 } from 'lucide-react';
 import { ChallengeData } from '../types';
 import { SoundFX } from '../utils/audio';
+import { preloadMediaPipe, subscribeToStatus, MediaPipeStatus } from '../utils/mediapipe-service';
 
 interface HomeScreenProps {
   onStart: (data: ChallengeData) => void;
@@ -11,6 +12,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
   const [website, setWebsite] = useState('instagram.com');
   const [duration, setDuration] = useState(5);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [aiStatus, setAiStatus] = useState<MediaPipeStatus>('idle');
+
+  // Preload MediaPipe AI when component mounts
+  useEffect(() => {
+    preloadMediaPipe();
+    const unsubscribe = subscribeToStatus(setAiStatus);
+    return unsubscribe;
+  }, []);
 
   // Check for 'target' query param (from Chrome Extension redirect)
   useEffect(() => {
@@ -52,7 +61,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
 
   return (
     <div className={`relative flex h-screen w-full flex-col overflow-hidden bg-gradient-to-b from-[#FF8C00] via-[#ae4641] to-[#4B0082] transition-transform duration-700 ease-in-out font-display ${isTransitioning ? 'transitioning' : ''}`}>
-      
+
       {/* Animation Styles */}
       <style>{`
         .transitioning .ui-element {
@@ -68,11 +77,27 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
         <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-white border-2 border-black shadow-neubrutalism-sm">
           <Dumbbell size={20} className="text-black md:scale-125" />
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 backdrop-blur-sm border border-white/20 hover:bg-black/30 transition-colors cursor-default">
-          <Flame size={20} className="text-[#ff8c00] fill-[#ff8c00] animate-pulse" />
-          <span className="text-sm font-bold text-white tracking-wide">3 DAY STREAK</span>
+        <div className="flex items-center gap-3">
+          {/* AI Status Indicator */}
+          <div className={`flex items-center gap-2 rounded-full px-3 py-2 backdrop-blur-sm border transition-all duration-300 ${aiStatus === 'ready'
+              ? 'bg-green-500/20 border-green-400/50'
+              : aiStatus === 'loading'
+                ? 'bg-yellow-500/20 border-yellow-400/50'
+                : 'bg-black/20 border-white/20'
+            }`}>
+            {aiStatus === 'loading' && <Loader2 size={14} className="text-yellow-300 animate-spin" />}
+            {aiStatus === 'ready' && <div className="w-2 h-2 rounded-full bg-green-400"></div>}
+            {aiStatus === 'idle' && <div className="w-2 h-2 rounded-full bg-white/50"></div>}
+            <span className="text-xs font-bold text-white/80 uppercase tracking-wide">
+              {aiStatus === 'ready' ? 'AI Ready' : aiStatus === 'loading' ? 'Loading AI...' : 'AI'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 backdrop-blur-sm border border-white/20 hover:bg-black/30 transition-colors cursor-default">
+            <Flame size={20} className="text-[#ff8c00] fill-[#ff8c00] animate-pulse" />
+            <span className="text-sm font-bold text-white tracking-wide">3 DAY STREAK</span>
+          </div>
         </div>
-        <button 
+        <button
           onClick={() => SoundFX.playClick()}
           className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-white border-2 border-black shadow-neubrutalism-sm cursor-pointer hover:bg-gray-100 transition-colors"
         >
@@ -82,7 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
 
       {/* Main Content - Responsive Split Layout */}
       <main className="ui-element flex-1 w-full max-w-7xl mx-auto z-10 transition-opacity duration-500 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-6 pb-6">
-        
+
         {/* Left Col: Typography */}
         <div className="text-center md:text-left md:flex-1">
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white leading-[0.9] tracking-tighter drop-shadow-lg mb-4 md:mb-8">
@@ -95,7 +120,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
 
         {/* Right Col: Controls Card */}
         <div className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col gap-6 md:gap-8">
-          
+
           {/* Target Website Input */}
           <div className="flex flex-col gap-2">
             <label className="ml-2 text-sm font-bold text-white tracking-wide uppercase">Target Website</label>
@@ -103,10 +128,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
               <div className="pl-4 text-black">
                 <LinkIcon size={24} />
               </div>
-              <input 
-                className="flex-1 border-none bg-transparent p-4 text-lg font-bold text-black placeholder:text-gray-400 focus:ring-0 outline-none w-full min-w-0" 
-                placeholder="instagram.com" 
-                type="text" 
+              <input
+                className="flex-1 border-none bg-transparent p-4 text-lg font-bold text-black placeholder:text-gray-400 focus:ring-0 outline-none w-full min-w-0"
+                placeholder="instagram.com"
+                type="text"
                 value={website}
                 onChange={handleInputChange}
                 onClick={() => SoundFX.init()} // Initialize audio ctx on first interaction
@@ -122,7 +147,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
             <div className="flex flex-col gap-2">
               <label className="ml-2 text-sm font-bold text-white tracking-wide uppercase">Duration</label>
               <div className="relative h-full">
-                <select 
+                <select
                   className="w-full h-full appearance-none rounded-2xl border-4 border-black bg-white p-4 pl-4 pr-10 text-lg font-bold text-black shadow-neubrutalism focus:ring-0 focus:outline-none focus:-translate-y-1 transition-transform cursor-pointer"
                   value={duration}
                   onChange={handleSelectChange}
@@ -152,7 +177,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
           </div>
 
           {/* Action Button */}
-          <button 
+          <button
             className="group relative w-full overflow-hidden rounded-full bg-primary border-4 border-black p-5 shadow-neubrutalism active:shadow-none active:translate-x-1 active:translate-y-1 transition-all hover:brightness-110 cursor-pointer mt-2"
             onClick={handleStart}
           >
@@ -162,7 +187,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
               <ArrowRight size={24} className="text-white font-bold group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
-           <p className="text-center text-xs font-medium text-white/60">
+          <p className="text-center text-xs font-medium text-white/60">
             Camera access required
           </p>
         </div>
