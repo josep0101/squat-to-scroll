@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "Squat to Scroll",
+  "version": "1.0.0",
+  "description": "Stop doomscrolling! Do squats to unlock your favorite social media sites. Turn screen time into exercise time.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "*://*.tiktok.com/*",
+    "*://*.facebook.com/*",
+    "*://*.twitter.com/*",
+    "*://*.x.com/*",
+    "*://*.reddit.com/*",
+    "*://*.youtube.com/*",
+    "*://*.twitch.tv/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://josep0101.github.io/squat-to-scroll/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Squat to Scroll - Click to manage"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "index.html",
+        "onboarding.html",
+        "assets/*",
+        "*.wasm",
+        "*.data",
+        "*.js",
+        "*.binarypb",
+        "*.tflite"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Squat to Scroll!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lexend', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #FF8C00 0%, #ae4641 50%, #4B0082 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .steps-nav {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: white;
+            transform: scale(1.2);
+        }
+
+        .step-dot.completed {
+            background: #00ff9d;
+        }
+
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-icon {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .pin-graphic {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .browser-bar {
+            background: #2d2d2d;
+            border-radius: 12px 12px 0 0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .browser-dot.red {
+            background: #ff5f57;
+        }
+
+        .browser-dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .browser-dot.green {
+            background: #28ca42;
+        }
+
+        .browser-content {
+            background: #1a1a1a;
+            border-radius: 0 0 12px 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .ext-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #FF8C00, #4B0082);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .pin-button {
+            background: #4285f4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+            }
+        }
+
+        .steps-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .steps-list li {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: white;
+            color: #4B0082;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .sites-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .site-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .site-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .site-card.selected {
+            background: rgba(0, 255, 157, 0.2);
+            border-color: #00ff9d;
+        }
+
+        .site-card .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .site-card .name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .site-card .check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #00ff9d;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+        }
+
+        .site-card.selected .check {
+            display: flex;
+        }
+
+        .custom-site-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .custom-site-input input {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .custom-site-input input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .custom-site-input button {
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: none;
+            background: white;
+            color: #4B0082;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .custom-site-input button:active {
+            transform: scale(0.95);
+        }
+
+        .config-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .config-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .config-value {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .config-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .config-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .config-hint {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            border: none;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: auto;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #4B0082;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-top: 12px;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: #00ff9d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-check {
+            width: 24px;
+            height: 24px;
+            background: #00ff9d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 14px;
+        }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        .feature-icon {
+            font-size: 32px;
+        }
+
+        .feature-title {
+            font-weight: 700;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .stats-row {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stats-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats-label {
+            opacity: 0.7;
+        }
+
+        .stats-value {
+            font-weight: 700;
+        }
+
+        .pro-tip {
+            background: rgba(0, 255, 157, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .pro-tip-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .pro-tip-text {
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Steps Navigation -->
+        <div class="steps-nav">
+            <div class="step-dot active" data-step="1"></div>
+            <div class="step-dot" data-step="2"></div>
+            <div class="step-dot" data-step="3"></div>
+            <div class="step-dot" data-step="4"></div>
+        </div>
+
+        <!-- Screen 1: Welcome -->
+        <div class="screen active" id="screen1">
+            <div class="welcome-icon">🏋️</div>
+            <h1>Welcome to<br>Squat to Scroll!</h1>
+            <p class="subtitle">Transform your doom-scrolling habit into a fitness opportunity. Earn your social media
+                time with quick squat sessions!</p>
+
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px;">
+                <div class="feature-row">
+                    <span class="feature-icon">🚫</span>
+                    <div>
+                        <div class="feature-title">Block distracting sites</div>
+                        <div class="feature-desc">Instagram, TikTok, Reddit & more</div>
+                    </div>
+                </div>
+                <div class="feature-row">
+                    <span class="feature-icon">💪</span>
+                    <div>
+                        <div class="feature-title">Do quick squats</div>
+                        <div class="feature-desc">AI tracks your form with your camera</div>
+                    </div>
+                </div>
+                <div class="feature-row">
+                    <span class="feature-icon">🎉</span>
+                    <div>
+                        <div class="feature-title">Unlock your scroll time</div>
+                        <div class="feature-desc">Guilt-free browsing, earned!</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-start">Let's Get Started →</button>
+        </div>
+
+        <!-- Screen 2: Pin Extension -->
+        <div class="screen" id="screen2">
+            <h1>📌 Pin Me!</h1>
+            <p class="subtitle">For the best experience, pin Squat to Scroll to your browser toolbar.</p>
+
+            <div class="pin-graphic">
+                <div class="browser-bar">
+                    <div class="browser-dots">
+                        <div class="browser-dot red"></div>
+                        <div class="browser-dot yellow"></div>
+                        <div class="browser-dot green"></div>
+                    </div>
+                </div>
+                <div class="browser-content">
+                    <div class="ext-icon">🏋️</div>
+                    <div class="pin-button">📌 Pin</div>
+                </div>
+            </div>
+
+            <ol class="steps-list">
+                <li>
+                    <span class="step-number">1</span>
+                    <span>Click the <strong>puzzle piece</strong> 🧩 icon in your toolbar</span>
+                </li>
+                <li>
+                    <span class="step-number">2</span>
+                    <span>Find <strong>"Squat to Scroll"</strong> in the list</span>
+                </li>
+                <li>
+                    <span class="step-number">3</span>
+                    <span>Click the <strong>pin icon</strong> 📌 to keep it visible</span>
+                </li>
+            </ol>
+
+            <button class="btn btn-primary" id="btn-pinned">I've Pinned It! →</button>
+            <button class="btn btn-secondary" id="btn-skip-pin">Skip for now</button>
+        </div>
+
+        <!-- Screen 3: Select Sites -->
+        <div class="screen" id="screen3">
+            <h1>🎯 What to Block?</h1>
+            <p class="subtitle">Select the sites you want to earn access to through squats.</p>
+
+            <div class="sites-grid" id="sites-grid">
+                <div class="site-card selected" data-site="instagram.com">
+                    <div class="check">✓</div>
+                    <div class="icon">📸</div>
+                    <div class="name">Instagram</div>
+                </div>
+                <div class="site-card selected" data-site="tiktok.com">
+                    <div class="check">✓</div>
+                    <div class="icon">🎵</div>
+                    <div class="name">TikTok</div>
+                </div>
+                <div class="site-card selected" data-site="facebook.com">
+                    <div class="check">✓</div>
+                    <div class="icon">👥</div>
+                    <div class="name">Facebook</div>
+                </div>
+                <div class="site-card selected" data-site="twitter.com">
+                    <div class="check">✓</div>
+                    <div class="icon">🐦</div>
+                    <div class="name">Twitter/X</div>
+                </div>
+                <div class="site-card selected" data-site="reddit.com">
+                    <div class="check">✓</div>
+                    <div class="icon">🤖</div>
+                    <div class="name">Reddit</div>
+                </div>
+                <div class="site-card" data-site="youtube.com">
+                    <div class="check">✓</div>
+                    <div class="icon">▶️</div>
+                    <div class="name">YouTube</div>
+                </div>
+            </div>
+
+            <div class="custom-site-input">
+                <input type="text" id="customSite" placeholder="Add custom site (e.g. twitch.tv)">
+                <button id="btn-add-site">Add</button>
+            </div>
+
+            <button class="btn btn-primary" id="btn-continue-sites" style="margin-top: 30px;">Continue →</button>
+        </div>
+
+        <!-- Screen 4: Configure Squats -->
+        <div class="screen" id="screen4">
+            <h1>⚙️ Set Your Challenge</h1>
+            <p class="subtitle">How many squats should unlock 5 minutes of browsing?</p>
+
+            <div class="config-card">
+                <div class="config-label">Squats per 5 minutes</div>
+                <div class="config-value" id="squatsValue">10</div>
+                <input type="range" class="config-slider" id="squatsSlider" min="3" max="25" value="10">
+                <div class="config-hint" id="difficultyHint">💪 Moderate challenge</div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stats-item">
+                    <span class="stats-label">Daily goal (estimated)</span>
+                    <span class="stats-value" id="dailyGoal">~50 squats</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Calories burned</span>
+                    <span class="stats-value" id="caloriesBurned">~25 kcal</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-finish">Complete Setup 🎉</button>
+        </div>
+
+        <!-- Screen 5: Success -->
+        <div class="screen" id="screen5">
+            <div class="success-icon">✓</div>
+            <h1>You're All Set!</h1>
+            <p class="subtitle">Squat to Scroll is now protecting you from mindless scrolling.</p>
+
+            <ul class="feature-list">
+                <li>
+                    <span class="feature-check">✓</span>
+                    <span>Blocking <span id="siteCount">5</span> distracting sites</span>
+                </li>
+                <li>
+                    <span class="feature-check">✓</span>
+                    <span><span id="squatsPerSession">10</span> squats = 5 min access</span>
+                </li>
+                <li>
+                    <span class="feature-check">✓</span>
+                    <span>AI pose detection ready</span>
+                </li>
+            </ul>
+
+            <div class="pro-tip">
+                <div class="pro-tip-label">Pro tip</div>
+                <div class="pro-tip-text">Try visiting Instagram now to test it out! 🚀</div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-close">Start Using Extension</button>
+        </div>
+    </div>
+
+    <script src="onboarding.js"></script>
+</body>
+
+</html>

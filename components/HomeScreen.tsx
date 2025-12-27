@@ -70,8 +70,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
     setDuration(Number(e.target.value));
   };
 
-  const squatsCost = duration === 5 ? 10 : duration === 10 ? 20 : duration * 2;
-
   return (
     <div className={`relative flex h-screen w-full flex-col overflow-hidden bg-gradient-to-b from-[#FF8C00] via-[#ae4641] to-[#4B0082] transition-transform duration-700 ease-in-out font-display ${isTransitioning ? 'transitioning' : ''}`}>
 
@@ -182,7 +180,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
               <label className="ml-2 text-sm font-bold text-white tracking-wide uppercase">Cost</label>
               <div className="flex h-full min-h-[68px] w-full items-center justify-center rounded-2xl border-4 border-black bg-[#ffcc00] shadow-neubrutalism transform hover:scale-105 transition-transform duration-300">
                 <div className="flex flex-col items-center justify-center leading-none py-2">
-                  <span className="text-3xl font-black text-black">{squatsCost}</span>
+                  <span className="text-3xl font-black text-black">{squatsRequired}</span>
                   <span className="text-[10px] font-black text-black/70 tracking-widest uppercase mt-1">SQUATS</span>
                 </div>
               </div>
