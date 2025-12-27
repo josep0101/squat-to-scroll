@@ -3,9 +3,6 @@ import { CheckCircle, X, Trophy, ArrowRight, Timer, PlusCircle, ExternalLink } f
 import { ChallengeData } from '../types';
 import { SoundFX } from '../utils/audio';
 
-// Fix for missing chrome type definition
-declare const chrome: any;
-
 interface SuccessScreenProps {
     data: ChallengeData;
     onDoMore: () => void;
@@ -13,25 +10,42 @@ interface SuccessScreenProps {
 
 const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
     const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+    const [extensionReady, setExtensionReady] = useState(false);
+    const [unlockStatus, setUnlockStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
     useEffect(() => {
         // Play unlock sound
         SoundFX.playUnlock();
 
-        // Check query params for the original full URL (passed by background script)
+        // Check query params for the original full URL
         const params = new URLSearchParams(window.location.search);
         const target = params.get('target');
         if (target) {
             setOriginalUrl(target);
         }
+
+        // Listen for extension ready signal
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'SQUAT_EXTENSION_READY') {
+                console.log('[SuccessScreen] Extension content script ready');
+                setExtensionReady(true);
+            }
+            if (event.data.type === 'SQUAT_UNLOCK_SUCCESS') {
+                console.log('[SuccessScreen] Unlock confirmed:', event.data.domain);
+                setUnlockStatus('success');
+            }
+            if (event.data.type === 'SQUAT_UNLOCK_ERROR') {
+                console.log('[SuccessScreen] Unlock error:', event.data.error);
+                setUnlockStatus('error');
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    const handleProceed = async () => {
+    const handleProceed = () => {
         SoundFX.playClick();
-
-        // Get the extension ID from manifest if available
-        // For externally_connectable, we need to send to the extension
-        const EXTENSION_ID = 'YOUR_EXTENSION_ID'; // Will be replaced or use sendMessage
 
         // Normalize domain
         let domain = data.website;
@@ -41,50 +55,34 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
             } catch (e) { }
         }
 
-        // Try to communicate with extension via chrome.runtime.sendMessage
-        // This works when the page is loaded in a tab that was opened by the extension
-        try {
-            // Check if we're in extension context (has chrome.runtime)
-            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-                // Try to find extension by sending to all extensions that have us in externally_connectable
-                // We'll use a broadcast approach
+        console.log('[SuccessScreen] Requesting unlock for:', domain);
 
-                // First try direct storage if available (extension context)
-                if (chrome.storage && chrome.storage.local) {
-                    const result = await chrome.storage.local.get(['unlockedSites', 'squatsToday']);
-                    const currentUnlocks = result.unlockedSites || {};
-                    const squatsToday = (result.squatsToday || 0) + data.squatsRequired;
+        // Send message to content script (injected by extension)
+        window.postMessage({
+            type: 'SQUAT_UNLOCK_REQUEST',
+            domain: domain,
+            duration: data.duration,
+            squats: data.squatsRequired,
+            targetUrl: originalUrl
+        }, '*');
 
-                    const expiry = Date.now() + (data.duration * 60 * 1000);
-
-                    await chrome.storage.local.set({
-                        unlockedSites: {
-                            ...currentUnlocks,
-                            [domain]: expiry
-                        },
-                        squatsToday
-                    });
-
-                    console.log('[SuccessScreen] Unlocked via direct storage:', domain);
+        // Fallback: if no extension, just redirect after a short delay
+        setTimeout(() => {
+            if (unlockStatus === 'pending') {
+                console.log('[SuccessScreen] No extension response, redirecting anyway...');
+                if (originalUrl) {
+                    window.location.href = originalUrl;
+                } else {
+                    window.open(`https://${data.website}`, '_blank');
                 }
             }
-        } catch (e) {
-            console.log('[SuccessScreen] Extension communication failed, trying fallback:', e);
-        }
-
-        // Redirect (works in all cases)
-        if (originalUrl) {
-            console.log('[SuccessScreen] Redirecting to:', originalUrl);
-            window.location.href = originalUrl;
-        } else {
-            window.open(`https://${data.website}`, '_blank');
-        }
+        }, 1000);
     };
 
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-[#231a0f] dark:text-white overflow-hidden antialiased h-screen w-full relative flex items-center justify-center">
 
-            {/* Background Pattern - Full Screen */}
+            {/* Background Pattern */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 pointer-events-none"></div>
 
             {/* Background Gradient Spotlights */}
@@ -93,7 +91,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[100px]"></div>
             </div>
 
-            {/* Confetti Container */}
+            {/* Confetti */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full z-0">
                 {Array.from({ length: 30 }).map((_, i) => (
                     <div key={i} className="confetti" style={{
@@ -104,7 +102,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
                 ))}
             </div>
 
-            {/* Main Card Container */}
+            {/* Main Card */}
             <div className="relative z-10 w-full max-w-md md:max-w-2xl bg-white/80 dark:bg-surface-dark/90 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row animate-pop-in mx-4">
 
                 {/* Left Side: Visuals */}
@@ -122,7 +120,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
                 {/* Right Side: Content */}
                 <div className="flex-1 p-8 flex flex-col relative">
 
-                    {/* Header Actions */}
+                    {/* Close Button */}
                     <div className="absolute top-6 right-6">
                         <button
                             onClick={() => { SoundFX.playClick(); onDoMore(); }}
@@ -144,7 +142,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ data, onDoMore }) => {
                     {/* Stats Summary */}
                     <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-4 flex items-center gap-4 mb-8 border border-black/5 dark:border-white/5">
                         <div className="size-12 rounded-xl bg-gray-200 dark:bg-black/40 overflow-hidden shrink-0">
-                            <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=150&q=80" className="w-full h-full object-cover" />
+                            <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=150&q=80" className="w-full h-full object-cover" alt="Squats" />
                         </div>
                         <div className="flex-1">
                             <p className="text-xs font-bold uppercase opacity-50">Activity</p>

@@ -30,7 +30,6 @@
             flex-direction: column;
         }
 
-        /* Steps navigation */
         .steps-nav {
             display: flex;
             justify-content: center;
@@ -55,7 +54,6 @@
             background: #00ff9d;
         }
 
-        /* Screen container */
         .screen {
             display: none;
             flex: 1;
@@ -79,7 +77,6 @@
             }
         }
 
-        /* Welcome Screen */
         .welcome-icon {
             width: 120px;
             height: 120px;
@@ -122,7 +119,6 @@
             line-height: 1.5;
         }
 
-        /* Pin Extension Screen */
         .pin-graphic {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -239,7 +235,6 @@
             flex-shrink: 0;
         }
 
-        /* Sites Selection */
         .sites-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -248,6 +243,7 @@
         }
 
         .site-card {
+            position: relative;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 16px;
@@ -295,11 +291,6 @@
             display: flex;
         }
 
-        .site-card {
-            position: relative;
-        }
-
-        /* Custom site input */
         .custom-site-input {
             display: flex;
             gap: 8px;
@@ -336,7 +327,6 @@
             transform: scale(0.95);
         }
 
-        /* Squats config */
         .config-card {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -362,6 +352,7 @@
             width: 100%;
             height: 8px;
             -webkit-appearance: none;
+            appearance: none;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             outline: none;
@@ -384,7 +375,6 @@
             margin-top: 12px;
         }
 
-        /* Buttons */
         .btn {
             width: 100%;
             padding: 18px;
@@ -419,7 +409,6 @@
             margin-top: 12px;
         }
 
-        /* Success screen */
         .success-icon {
             width: 100px;
             height: 100px;
@@ -471,6 +460,71 @@
             color: #000;
             font-size: 14px;
         }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        .feature-icon {
+            font-size: 32px;
+        }
+
+        .feature-title {
+            font-weight: 700;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .stats-row {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stats-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats-label {
+            opacity: 0.7;
+        }
+
+        .stats-value {
+            font-weight: 700;
+        }
+
+        .pro-tip {
+            background: rgba(0, 255, 157, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .pro-tip-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .pro-tip-text {
+            font-weight: 700;
+        }
     </style>
 </head>
 
@@ -492,33 +546,30 @@
                 time with quick squat sessions!</p>
 
             <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px;">
-                <div
-                    style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.1); padding: 16px; border-radius: 16px;">
-                    <span style="font-size: 32px;">🚫</span>
+                <div class="feature-row">
+                    <span class="feature-icon">🚫</span>
                     <div>
-                        <div style="font-weight: 700;">Block distracting sites</div>
-                        <div style="font-size: 14px; opacity: 0.7;">Instagram, TikTok, Reddit & more</div>
+                        <div class="feature-title">Block distracting sites</div>
+                        <div class="feature-desc">Instagram, TikTok, Reddit & more</div>
                     </div>
                 </div>
-                <div
-                    style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.1); padding: 16px; border-radius: 16px;">
-                    <span style="font-size: 32px;">💪</span>
+                <div class="feature-row">
+                    <span class="feature-icon">💪</span>
                     <div>
-                        <div style="font-weight: 700;">Do quick squats</div>
-                        <div style="font-size: 14px; opacity: 0.7;">AI tracks your form with your camera</div>
+                        <div class="feature-title">Do quick squats</div>
+                        <div class="feature-desc">AI tracks your form with your camera</div>
                     </div>
                 </div>
-                <div
-                    style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.1); padding: 16px; border-radius: 16px;">
-                    <span style="font-size: 32px;">🎉</span>
+                <div class="feature-row">
+                    <span class="feature-icon">🎉</span>
                     <div>
-                        <div style="font-weight: 700;">Unlock your scroll time</div>
-                        <div style="font-size: 14px; opacity: 0.7;">Guilt-free browsing, earned!</div>
+                        <div class="feature-title">Unlock your scroll time</div>
+                        <div class="feature-desc">Guilt-free browsing, earned!</div>
                     </div>
                 </div>
             </div>
 
-            <button class="btn btn-primary" onclick="nextStep()">Let's Get Started →</button>
+            <button class="btn btn-primary" id="btn-start">Let's Get Started →</button>
         </div>
 
         <!-- Screen 2: Pin Extension -->
@@ -536,9 +587,7 @@
                 </div>
                 <div class="browser-content">
                     <div class="ext-icon">🏋️</div>
-                    <div class="pin-button">
-                        📌 Pin
-                    </div>
+                    <div class="pin-button">📌 Pin</div>
                 </div>
             </div>
 
@@ -557,8 +606,8 @@
                 </li>
             </ol>
 
-            <button class="btn btn-primary" onclick="nextStep()">I've Pinned It! →</button>
-            <button class="btn btn-secondary" onclick="nextStep()">Skip for now</button>
+            <button class="btn btn-primary" id="btn-pinned">I've Pinned It! →</button>
+            <button class="btn btn-secondary" id="btn-skip-pin">Skip for now</button>
         </div>
 
         <!-- Screen 3: Select Sites -->
@@ -566,7 +615,7 @@
             <h1>🎯 What to Block?</h1>
             <p class="subtitle">Select the sites you want to earn access to through squats.</p>
 
-            <div class="sites-grid">
+            <div class="sites-grid" id="sites-grid">
                 <div class="site-card selected" data-site="instagram.com">
                     <div class="check">✓</div>
                     <div class="icon">📸</div>
@@ -601,10 +650,10 @@
 
             <div class="custom-site-input">
                 <input type="text" id="customSite" placeholder="Add custom site (e.g. twitch.tv)">
-                <button onclick="addCustomSite()">Add</button>
+                <button id="btn-add-site">Add</button>
             </div>
 
-            <button class="btn btn-primary" style="margin-top: 30px;" onclick="nextStep()">Continue →</button>
+            <button class="btn btn-primary" id="btn-continue-sites" style="margin-top: 30px;">Continue →</button>
         </div>
 
         <!-- Screen 4: Configure Squats -->
@@ -615,23 +664,22 @@
             <div class="config-card">
                 <div class="config-label">Squats per 5 minutes</div>
                 <div class="config-value" id="squatsValue">10</div>
-                <input type="range" class="config-slider" id="squatsSlider" min="3" max="25" value="10"
-                    oninput="updateSquats()">
+                <input type="range" class="config-slider" id="squatsSlider" min="3" max="25" value="10">
                 <div class="config-hint" id="difficultyHint">💪 Moderate challenge</div>
             </div>
 
-            <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <span style="opacity: 0.7;">Daily goal (estimated)</span>
-                    <span style="font-weight: 700;" id="dailyGoal">~50 squats</span>
+            <div class="stats-row">
+                <div class="stats-item">
+                    <span class="stats-label">Daily goal (estimated)</span>
+                    <span class="stats-value" id="dailyGoal">~50 squats</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="opacity: 0.7;">Calories burned</span>
-                    <span style="font-weight: 700;" id="caloriesBurned">~25 kcal</span>
+                <div class="stats-item">
+                    <span class="stats-label">Calories burned</span>
+                    <span class="stats-value" id="caloriesBurned">~25 kcal</span>
                 </div>
             </div>
 
-            <button class="btn btn-primary" onclick="finishSetup()">Complete Setup 🎉</button>
+            <button class="btn btn-primary" id="btn-finish">Complete Setup 🎉</button>
         </div>
 
         <!-- Screen 5: Success -->
@@ -655,13 +703,12 @@
                 </li>
             </ul>
 
-            <div
-                style="background: rgba(0,255,157,0.2); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Pro tip</div>
-                <div style="font-weight: 700;">Try visiting Instagram now to test it out! 🚀</div>
+            <div class="pro-tip">
+                <div class="pro-tip-label">Pro tip</div>
+                <div class="pro-tip-text">Try visiting Instagram now to test it out! 🚀</div>
             </div>
 
-            <button class="btn btn-primary" onclick="closeOnboarding()">Start Using Extension</button>
+            <button class="btn btn-primary" id="btn-close">Start Using Extension</button>
         </div>
     </div>
 

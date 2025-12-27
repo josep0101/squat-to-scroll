@@ -21,6 +21,17 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://josep0101.github.io/squat-to-scroll/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -34,12 +45,6 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "externally_connectable": {
-    "matches": [
-      "https://josep0101.github.io/*",
-      "http://localhost:*/*"
-    ]
   },
   "web_accessible_resources": [
     {
